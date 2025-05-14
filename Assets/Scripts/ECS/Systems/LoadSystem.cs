@@ -17,11 +17,11 @@ public class LoadSystem : IEcsInitSystem
         string json = File.ReadAllText(path);
         var saveData = JsonUtility.FromJson<SaveData>(json);
 
-        // Load balance
+        // Загрузка баланса
         var balanceEntity = _world.NewEntity();
         balanceEntity.Get<Balance>().Value = saveData.Balance;
 
-        // Load businesses
+        // Загрузка бизнесов
         foreach (var businessSave in saveData.Businesses)
         {
             var businessEntity = _world.NewEntity();

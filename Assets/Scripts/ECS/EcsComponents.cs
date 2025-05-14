@@ -28,8 +28,8 @@ public struct Balance
     public int Value;
 }
 
-public struct UpdateViewEvent {}
+public readonly struct UpdateViewEvent {}
 
-// Для сохранения/загрузки
-public struct SaveEvent {}
-public struct LoadEvent {}
+public readonly struct SaveEvent {}
+
+public readonly struct LoadEvent {}

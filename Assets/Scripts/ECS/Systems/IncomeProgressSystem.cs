@@ -31,20 +31,11 @@ public class IncomeProgressSystem : IEcsRunSystem
 
             if (progress.TimePassed >= incomeDelay)
             {
-                int income = CalculateIncome(business, _config);
+                int income = BusinessUtils.CalculateIncome(business, _config);
                 balance.Value += income;
                 progress.TimePassed = 0;
                 progress.Value = 0;
             }
         }
-    }
-
-    private int CalculateIncome(Business business, BusinessConfig config)
-    {
-        float multiplier = 1f;
-        if (business.Upgrade1Purchased) multiplier += config.Upgrade1Multipliers[business.Id];
-        if (business.Upgrade2Purchased) multiplier += config.Upgrade2Multipliers[business.Id];
-
-        return (int)(business.Level * config.BaseIncomes[business.Id] * multiplier);
     }
 }

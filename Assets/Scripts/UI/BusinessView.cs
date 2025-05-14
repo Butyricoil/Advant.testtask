@@ -1,11 +1,12 @@
 ﻿using Leopotam.Ecs;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
+using System;
 
-public class BusinessView : MonoBehaviour
+public class BusinessView : MonoBehaviour, IDisposable
 {
+    [Header("UI References")]
     [SerializeField] private TMP_Text _nameBusinessText;    // название бизнеса
     [SerializeField] private Image _progressBusinessImage;  // прогресс бар
     [SerializeField] private TMP_Text _levelBusinessText; // уровень бизнеса
@@ -22,12 +23,34 @@ public class BusinessView : MonoBehaviour
     private BusinessConfig _config; // ссылка на конфигурацию бизнеса
     private BusinessNamesConfig _namesConfig; // ссылка на конфигурацию названий бизнеса
 
+    private void ValidateReferences() // проверка объектов со сцены
+    {
+        if (_nameBusinessText == null) Debug.LogError("Name text reference is missing!");
+        if (_progressBusinessImage == null) Debug.LogError("Progress image reference is missing!");
+        if (_levelBusinessText == null) Debug.LogError("Level text reference is missing!");
+        if (_incomeBusinessText == null) Debug.LogError("Income text reference is missing!");
+        if (_levelUpBusinessButton == null) Debug.LogError("Level up button reference is missing!");
+        if (_levelUpBusinessPriceText == null) Debug.LogError("Level up price text reference is missing!");
+        if (_upgradeBusiness1Button == null) Debug.LogError("Upgrade 1 button reference is missing!");
+        if (_upgradeBusiness1Text == null) Debug.LogError("Upgrade 1 text reference is missing!");
+        if (_upgradeBusiness2Button == null) Debug.LogError("Upgrade 2 button reference is missing!");
+        if (_upgradeBusiness2Text == null) Debug.LogError("Upgrade 2 text reference is missing!");
+    }
+
     public void Initialize(EcsWorld world, EcsEntity entity, BusinessConfig config, BusinessNamesConfig namesConfig)
     {
+        ValidateReferences();
+
         _world = world;
         _entity = entity;
         _config = config;
         _namesConfig = namesConfig;
+
+        if (_world == null || !_entity.IsAlive() || _config == null || _namesConfig == null)
+        {
+            Debug.LogError("Failed to initialize BusinessView: Invalid references");
+            return;
+        }
 
         ref var business = ref _entity.Get<Business>();
 
@@ -53,42 +76,40 @@ public class BusinessView : MonoBehaviour
         }
     }
 
-    private void UpdateView()
+    public void UpdateView()
     {
         if (!_entity.IsAlive()) return;
 
         ref var business = ref _entity.Get<Business>();
 
         _levelBusinessText.text = $"LVL {business.Level}";
-        _incomeBusinessText.text = $"Доход: {CalculateIncome(business)}";
+        _incomeBusinessText.text = $"Income: ${BusinessUtils.CalculateIncome(business, _config)}";
 
         int levelUpPrice = (business.Level + 1) * _config.BaseCosts[business.Id];
         _levelUpBusinessPriceText.text = $"LVL UP\n${levelUpPrice}";
 
+        UpdateUpgradeButtons(business);
+    }
+
+    private void UpdateUpgradeButtons(Business business)
+    {
         if (business.Upgrade1Purchased) // проверяем, куплено ли первое улучшение
         {
-            _upgradeBusiness1Text.text = "Куплено";
+            _upgradeBusiness1Text.text = "Purchased";
             _upgradeBusiness1Button.interactable = false;
         }
 
         if (business.Upgrade2Purchased) // проверяем, куплено ли второе улучшение
         {
-            _upgradeBusiness2Text.text = "Куплено";
+            _upgradeBusiness2Text.text = "Purchased";
             _upgradeBusiness2Button.interactable = false;
         }
     }
 
-    private int CalculateIncome(Business business) // расчет дохода
-    {
-        float multiplier = 1f;
-        if (business.Upgrade1Purchased) multiplier += _config.Upgrade1Multipliers[business.Id];
-        if (business.Upgrade2Purchased) multiplier += _config.Upgrade2Multipliers[business.Id];
-
-        return (int)(business.Level * _config.BaseIncomes[business.Id] * multiplier);
-    }
-
     private void OnLevelUpClicked() // кнопка покупки Lеvеlup
     {
+        if (!_world.IsAlive() || !_entity.IsAlive()) return;
+
         var requestEntity = _world.NewEntity();
         ref var request = ref requestEntity.Get<LevelUpRequest>();
         request.BusinessId = _entity.Get<Business>().Id;
@@ -96,9 +117,26 @@ public class BusinessView : MonoBehaviour
 
     private void OnUpgradeClicked(int upgradeId) // кнопка покупки улучшения
     {
+        if (!_world.IsAlive() || !_entity.IsAlive()) return;
+
         var requestEntity = _world.NewEntity();
         ref var request = ref requestEntity.Get<UpgradeRequest>();
         request.BusinessId = _entity.Get<Business>().Id;
         request.UpgradeId = upgradeId;
+    }
+
+    public void Dispose() // отписка от кнопки
+    {
+        if (_levelUpBusinessButton != null)
+            _levelUpBusinessButton.onClick.RemoveListener(OnLevelUpClicked);
+        if (_upgradeBusiness1Button != null)
+            _upgradeBusiness1Button.onClick.RemoveListener(() => OnUpgradeClicked(1));
+        if (_upgradeBusiness2Button != null)
+            _upgradeBusiness2Button.onClick.RemoveListener(() => OnUpgradeClicked(2));
+    }
+
+    private void OnDestroy()
+    {
+        Dispose();
     }
 }

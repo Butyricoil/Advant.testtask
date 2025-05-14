@@ -9,8 +9,22 @@ public class BalanceView : MonoBehaviour
     private EcsWorld _world;
     private EcsEntity _balanceEntity;
 
+    private void ValidateReferences()
+    {
+        if (_balanceText == null)
+            Debug.LogError("Balance text reference is missing!");
+    }
+
     public void Initialize(EcsWorld world, EcsEntity balanceEntity)
     {
+        ValidateReferences();
+
+        if (world == null || !balanceEntity.IsAlive())
+        {
+            Debug.LogError("Failed to initialize BalanceView: Invalid references");
+            return;
+        }
+
         _world = world;
         _balanceEntity = balanceEntity;
         UpdateView();
@@ -23,11 +37,13 @@ public class BalanceView : MonoBehaviour
         UpdateView();
     }
 
-    private void UpdateView()
+    public void UpdateView()
     {
+        if (!_balanceEntity.IsAlive() || _balanceText == null) return;
+
         if (_balanceEntity.Has<Balance>())
         {
-            _balanceText.text = $"Баланс: ${_balanceEntity.Get<Balance>().Value}";
+            _balanceText.text = $"Balance: ${_balanceEntity.Get<Balance>().Value}";
         }
     }
 }

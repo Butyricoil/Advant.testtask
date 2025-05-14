@@ -15,14 +15,14 @@ public class BusinessInitSystem : IEcsInitSystem
 
     public void Init()
     {
-        // Initial balance (если не загрузилось из сохранения)
+        // инициализация баланса (если не загрузилось из сохранения)
         if (_world.GetFilter(typeof(EcsFilter<Balance>)).IsEmpty())
         {
             var balanceEntity = _world.NewEntity();
             balanceEntity.Get<Balance>().Value = 150;
         }
 
-        // Initialize businesses (если не загрузились из сохранения)
+        // инициализация бизнеса (если не загрузились из сохранения)
         var businessFilter = _world.GetFilter(typeof(EcsFilter<Business>));
         if (businessFilter.IsEmpty())
         {

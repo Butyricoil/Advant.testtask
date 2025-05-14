@@ -9,11 +9,13 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private Transform _businessesContainer; // контейнер для бизнеса
     [SerializeField] private BalanceView _balanceView; // представление баланса
 
-    private EcsWorld _world; // мир ECS
-    private EcsSystems _systems; // системы ECS
+    private EcsWorld _world;
+    private EcsSystems _systems;
 
     private void Start()
     {
+        ValidateReferences();
+
         _world = new EcsWorld();
         _systems = new EcsSystems(_world);
 
@@ -22,9 +24,9 @@ public class GameBootstrap : MonoBehaviour
             .Add(new IncomeProgressSystem(_businessConfig))
             .Add(new LevelUpSystem(_businessConfig))
             .Add(new UpgradeSystem(_businessConfig))
-            .Add(new SaveSystem())
-            .Add(new LoadSystem())
-            .Add(new ViewUpdateSystem())
+            // .Add(new SaveSystem())
+            // .Add(new LoadSystem())
+            .Add(new UpdateViewSystem())
             .OneFrame<UpdateViewEvent>()
             .OneFrame<LevelUpRequest>()
             .OneFrame<UpgradeRequest>()
@@ -36,8 +38,24 @@ public class GameBootstrap : MonoBehaviour
         InitializeUI();
     }
 
+    private void ValidateReferences()
+    {
+        if (_businessConfig == null)
+            Debug.LogError("BusinessConfig reference is missing!");
+        if (_namesConfig == null)
+            Debug.LogError("BusinessNamesConfig reference is missing!");
+        if (_businessViewPrefab == null)
+            Debug.LogError("BusinessView prefab reference is missing!");
+        if (_businessesContainer == null)
+            Debug.LogError("Businesses container reference is missing!");
+        if (_balanceView == null)
+            Debug.LogError("BalanceView reference is missing!");
+    }
+
     private void InitializeUI()
     {
+        if (!_world.IsAlive()) return;
+
         // инициализация представления баланса
         var balanceFilter = _world.GetFilter(typeof(EcsFilter<Balance>));
         if (!balanceFilter.IsEmpty())
@@ -62,7 +80,7 @@ public class GameBootstrap : MonoBehaviour
 
     // private void OnApplicationQuit()
     // {
-    //     _systems?.Get<SaveSystem>()?.Save();
+    //     _systems?.Get1<SaveSystem>()?.Save();
     // }
 
     private void OnDestroy()
