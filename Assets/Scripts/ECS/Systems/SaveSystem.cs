@@ -1,58 +1,74 @@
-﻿using System.Collections.Generic;
-using Leopotam.Ecs;
+﻿using Leopotam.Ecs;
 using System.IO;
 using UnityEngine;
+using System.Collections.Generic;
 
-public class SaveSystem : IEcsSystem
+public class SaveSystem : IEcsRunSystem
 {
-    private const string SaveFileName = "game_save.json";
-
     private EcsWorld _world;
-    private EcsFilter<Business> _businessFilter;
-    private EcsFilter<Balance> _balanceFilter;
+    private EcsFilter<SaveEvent> _saveEvents;
+    private EcsFilter<Business> _businesses;
+    private EcsFilter<Balance> _balance;
+    private EcsFilter<Business, IncomeProgress> _progress;
 
-    public void Save()
+    public void Run()
     {
-        var saveData = new SaveData();
+        if (_saveEvents.IsEmpty()) return;
 
-        // Save balance
-        if (!_balanceFilter.IsEmpty())
+        var saveData = new GameSaveData
         {
-            saveData.Balance = _balanceFilter.Get1(0).Value;
-        }
+            Balance = _balance.Get1(0).Value,
+            Businesses = new List<BusinessSaveData>()
+        };
 
-        // Save businesses
-        foreach (var i in _businessFilter)
+        // сохранение данных бизнеса
+        foreach (var i in _businesses)
         {
-            var business = _businessFilter.Get1(i);
-            var progress = _businessFilter.GetEntity(i).Get<IncomeProgress>();
-
-            saveData.Businesses.Add(new BusinessSaveData
+            ref var business = ref _businesses.Get1(i);
+            var businessData = new BusinessSaveData
             {
                 Id = business.Id,
                 Level = business.Level,
                 Upgrade1Purchased = business.Upgrade1Purchased,
-                Upgrade2Purchased = business.Upgrade2Purchased,
-                IncomeProgress = progress.Value,
-                IncomeTimePassed = progress.TimePassed
-            });
+                Upgrade2Purchased = business.Upgrade2Purchased
+            };
+            saveData.Businesses.Add(businessData);
         }
 
-        string json = JsonUtility.ToJson(saveData);
-        File.WriteAllText(GetSavePath(), json);
-    }
+        // сохранение прогресса дохода
+        foreach (var i in _progress)
+        {
+            ref var business = ref _progress.Get1(i);
+            ref var progress = ref _progress.Get2(i);
+            var businessId = business.Id;
+            
+            var businessData = saveData.Businesses.Find(b => b.Id == businessId);
+            if (businessData != null)
+            {
+                businessData.IncomeProgress = progress.Value;
+                businessData.TimePassed = progress.TimePassed;
+            }
+        }
 
-    private string GetSavePath()
-    {
-        return Path.Combine(Application.persistentDataPath, SaveFileName);
+        // сохранение в файл
+        string json = JsonUtility.ToJson(saveData, true);
+        string savePath = Path.Combine(Application.persistentDataPath, "game_save.json");
+        File.WriteAllText(savePath, json);
+        Debug.Log($"Игра сохранена в: {savePath}");
+
+        // очистка событий сохранения
+        foreach (var i in _saveEvents)
+        {
+            _saveEvents.GetEntity(i).Destroy();
+        }
     }
 }
 
 [System.Serializable]
-public class SaveData
+public class GameSaveData
 {
     public int Balance;
-    public List<BusinessSaveData> Businesses = new List<BusinessSaveData>();
+    public List<BusinessSaveData> Businesses;
 }
 
 [System.Serializable]
@@ -63,5 +79,5 @@ public class BusinessSaveData
     public bool Upgrade1Purchased;
     public bool Upgrade2Purchased;
     public float IncomeProgress;
-    public float IncomeTimePassed;
+    public float TimePassed;
 }

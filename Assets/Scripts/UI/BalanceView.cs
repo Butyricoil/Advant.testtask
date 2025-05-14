@@ -39,7 +39,7 @@ public class BalanceView : MonoBehaviour
 
     public void UpdateView()
     {
-        if (!_balanceEntity.IsAlive() || _balanceText == null) return;
+        if (!_balanceEntity.IsAlive() || !_balanceText) return;
 
         if (_balanceEntity.Has<Balance>())
         {

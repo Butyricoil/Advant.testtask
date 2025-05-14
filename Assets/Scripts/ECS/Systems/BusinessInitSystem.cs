@@ -1,4 +1,6 @@
 ﻿using Leopotam.Ecs;
+using System.IO;
+using UnityEngine;
 
 public class BusinessInitSystem : IEcsInitSystem
 {
@@ -6,6 +8,7 @@ public class BusinessInitSystem : IEcsInitSystem
     private readonly BusinessNamesConfig _namesConfig;
 
     private EcsWorld _world;
+    private EcsFilter<BusinessInitialized> _initFilter;
 
     public BusinessInitSystem(BusinessConfig businessConfig, BusinessNamesConfig namesConfig)
     {
@@ -15,7 +18,13 @@ public class BusinessInitSystem : IEcsInitSystem
 
     public void Init()
     {
-        // инициализация баланса (если не загрузилось из сохранения)
+        // проверяем, не инициализированы ли уже бизнесы
+        if (!_initFilter.IsEmpty())
+        {
+            return;
+        }
+
+        // инициализация баланса (если не загрузился из сохранения)
         if (_world.GetFilter(typeof(EcsFilter<Balance>)).IsEmpty())
         {
             var balanceEntity = _world.NewEntity();
@@ -26,17 +35,20 @@ public class BusinessInitSystem : IEcsInitSystem
         var businessFilter = _world.GetFilter(typeof(EcsFilter<Business>));
         if (businessFilter.IsEmpty())
         {
-            for (int i = 0; i < _businessConfig.IncomeDelays.Length; i++)
+            for (int i = 0; i < _businessConfig.BaseCosts.Length; i++)
             {
-                var businessEntity = _world.NewEntity();
-                ref var business = ref businessEntity.Get<Business>();
+                var entity = _world.NewEntity();
+                ref var business = ref entity.Get<Business>();
                 business.Id = i;
-                business.Level = i == 0 ? 1 : 0;
+                business.Level = 0;
+                business.Upgrade1Purchased = false;
+                business.Upgrade2Purchased = false;
 
-                ref var progress = ref businessEntity.Get<IncomeProgress>();
-                progress.Value = 0;
-                progress.TimePassed = 0;
+                entity.Get<IncomeProgress>();
             }
         }
+
+        // отмечаем, что инициализация завершена
+        _world.NewEntity().Get<BusinessInitialized>();
     }
 }

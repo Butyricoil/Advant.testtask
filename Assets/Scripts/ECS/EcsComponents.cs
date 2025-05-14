@@ -33,3 +33,5 @@ public readonly struct UpdateViewEvent {}
 public readonly struct SaveEvent {}
 
 public readonly struct LoadEvent {}
+
+public struct BusinessInitialized {}
