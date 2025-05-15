@@ -15,7 +15,7 @@ public class DropSaveSystem : IEcsRunSystem
         if (_dropSaveEvents.IsEmpty()) return;
 
         // Удаляем файл сохранения
-        string savePath = Path.Combine(Application.persistentDataPath, "gamesave.json");
+        string savePath = Path.Combine(Application.persistentDataPath, "game_save.json");
         if (File.Exists(savePath))
         {
             File.Delete(savePath);

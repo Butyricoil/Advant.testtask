@@ -99,6 +99,10 @@ namespace UI.PauseMenu
 
         private void OnExitClicked()
         {
+            if (_world != null && _world.IsAlive())
+            {
+                _world.NewEntity().Get<SaveEvent>();
+            }
             Time.timeScale = 1f;
             SceneManager.LoadScene("MainMenu");
         }

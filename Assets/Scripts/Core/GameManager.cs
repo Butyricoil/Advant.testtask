@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour
     private EcsWorld _world;
     private EcsSystems _systems;
 
+    private float _autosaveInterval = 120f;
+    private float _autosaveTimer = 0f;
+
     private void Start()
     {
         ValidateReferences();
@@ -115,6 +118,17 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         _systems?.Run();
+
+        // Автосейв
+        if (_world != null && _world.IsAlive())
+        {
+            _autosaveTimer += Time.deltaTime;
+            if (_autosaveTimer >= _autosaveInterval)
+            {
+                _world.NewEntity().Get<SaveEvent>();
+                _autosaveTimer = 0f;
+            }
+        }
     }
 
     private void OnApplicationQuit()
