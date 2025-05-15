@@ -1,5 +1,6 @@
 using Leopotam.Ecs;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace UI.PauseMenu
@@ -52,6 +53,7 @@ namespace UI.PauseMenu
             _continueButton.onClick.AddListener(OnContinueClicked);
             _saveButton.onClick.AddListener(OnSaveClicked);
             _dropSaveButton.onClick.AddListener(OnDropSaveClicked);
+            _exitButton.onClick.AddListener(OnExitClicked);
 
             _pauseMenu.SetActive(false);
         }
@@ -95,7 +97,11 @@ namespace UI.PauseMenu
             }
         }
 
-
+        private void OnExitClicked()
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("MainMenu");
+        }
 
         private void OnDestroy()
         {
@@ -107,7 +113,8 @@ namespace UI.PauseMenu
                 _saveButton.onClick.RemoveListener(OnSaveClicked);
             if (_dropSaveButton != null)
                 _dropSaveButton.onClick.RemoveListener(OnDropSaveClicked);
-
+            if (_exitButton != null)
+                _exitButton.onClick.RemoveListener(OnExitClicked);
         }
     }
 } 

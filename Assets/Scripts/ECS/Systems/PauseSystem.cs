@@ -10,7 +10,6 @@ public class PauseSystem : IEcsRunSystem
 
     public void Run()
     {
-        // Обработка события паузы
         if (!_pauseEvents.IsEmpty() && _pausedFilter.IsEmpty())
         {
             _world.NewEntity().Get<Paused>();
@@ -19,7 +18,6 @@ public class PauseSystem : IEcsRunSystem
                 _pauseEvents.GetEntity(i).Destroy();
         }
 
-        // Обработка события снятия паузы
         if (!_unpauseEvents.IsEmpty() && !_pausedFilter.IsEmpty())
         {
             foreach (var i in _pausedFilter)
