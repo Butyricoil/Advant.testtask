@@ -8,6 +8,7 @@ public class IncomeProgressSystem : IEcsRunSystem
     private EcsWorld _world;
     private EcsFilter<Business, IncomeProgress> _filter;
     private EcsFilter<Balance> _balanceFilter;
+    private EcsFilter<Paused> _pausedFilter;
 
     public IncomeProgressSystem(BusinessConfig config)
     {
@@ -16,6 +17,9 @@ public class IncomeProgressSystem : IEcsRunSystem
 
     public void Run()
     {
+        if (!_pausedFilter.IsEmpty())
+            return;
+
         ref var balance = ref _balanceFilter.Get1(0);
 
         foreach (var i in _filter)

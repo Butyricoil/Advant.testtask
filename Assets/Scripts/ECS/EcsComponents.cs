@@ -28,14 +28,12 @@ public readonly struct SaveEvent {}
 
 public readonly struct DropSaveEvent {}
 
-public readonly struct LoadEvent {}
-
 public struct BusinessInitialized {}
-
-public struct PauseEvent { }
-
-public struct ContinueEvent { }
 
 public struct LoadSceneEvent { public string SceneName; }
 
-public struct ExitEvent { }
+public readonly struct PauseEvent {}
+public readonly struct UnpauseEvent {}
+
+public struct Paused {}
+

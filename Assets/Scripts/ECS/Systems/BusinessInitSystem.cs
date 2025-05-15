@@ -40,7 +40,7 @@ public class BusinessInitSystem : IEcsInitSystem
                 var entity = _world.NewEntity();
                 ref var business = ref entity.Get<Business>();
                 business.Id = i;
-                business.Level = 0;
+                business.Level = i == 0 ? 1 : 0;
                 business.Upgrade1Purchased = false;
                 business.Upgrade2Purchased = false;
 

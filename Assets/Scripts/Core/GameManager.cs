@@ -43,6 +43,7 @@ public class GameManager : MonoBehaviour
             .Add(new UpdateViewSystem())
             .Add(new SaveSystem())
             .Add(new DropSaveSystem())
+            .Add(new PauseSystem())
             .OneFrame<UpdateViewEvent>()
             .OneFrame<LevelUpRequest>()
             .OneFrame<UpgradeRequest>()
@@ -72,9 +73,9 @@ public class GameManager : MonoBehaviour
     {
         if (!_world.IsAlive()) return;
 
+        _pauseMenuView.Initialize(_world);
         InitializeBalanceView();
         InitializeBusinessViews();
-        InitializePauseMenu();
     }
 
     private void InitializeBalanceView()
@@ -110,20 +111,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void InitializePauseMenu()
-    {
-        _pauseMenuView.Initialize(_world);
-        var pauseFilter = _world.GetFilter(typeof(EcsFilter<PauseEvent>));
-        if (!pauseFilter.IsEmpty())
-        {
-            foreach (var i in pauseFilter)
-            {
-                var entity = pauseFilter.GetEntity(i);
-                entity.Destroy();
-            }
-        }
-        Debug.Log("Меню паузы инициализировано");
-    }
 
     private void Update()
     {

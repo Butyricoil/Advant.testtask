@@ -21,7 +21,6 @@ public class BusinessNamesConfig : ScriptableObject
             Debug.LogError("All arrays in BusinessNamesConfig must have the same length!");
         }
 
-        // Validate that names are not empty
         for (int i = 0; i < length; i++)
         {
             if (string.IsNullOrEmpty(BusinessNames[i]) || 

@@ -15,9 +15,14 @@ namespace UI.PauseMenu
 
         [Header("Menu")]
         [SerializeField] private GameObject _pauseMenu;
-        private readonly string _sceneName = "MainMenu";
+
 
         private EcsWorld _world;
+
+        public void Initialize(EcsWorld world)
+        {
+            _world = world;
+        }
 
         private void Start()
         {
@@ -47,21 +52,18 @@ namespace UI.PauseMenu
             _continueButton.onClick.AddListener(OnContinueClicked);
             _saveButton.onClick.AddListener(OnSaveClicked);
             _dropSaveButton.onClick.AddListener(OnDropSaveClicked);
-            _exitButton.onClick.AddListener(OnExitClicked);
 
             _pauseMenu.SetActive(false);
         }
 
-        public void Initialize(EcsWorld world)
-        {
-            _world = world;
-        }
 
         private void OnPauseClicked()
         {
             if (_world != null && _world.IsAlive())
             {
                 _pauseMenu.SetActive(true);
+                _pauseButton.interactable = false;
+                _pauseButton.gameObject.SetActive(false);
                 _world.NewEntity().Get<PauseEvent>();
             }
         }
@@ -71,7 +73,9 @@ namespace UI.PauseMenu
             if (_world != null && _world.IsAlive())
             {
                 _pauseMenu.SetActive(false);
-                _world.NewEntity().Get<ContinueEvent>();
+                _pauseButton.interactable = true;
+                _pauseButton.gameObject.SetActive(true);
+                _world.NewEntity().Get<UnpauseEvent>();
             }
         }
 
@@ -91,14 +95,7 @@ namespace UI.PauseMenu
             }
         }
 
-         private void OnExitClicked()
-         {
-             if (_world != null && _world.IsAlive() && !string.IsNullOrEmpty(_sceneName))
-             {
-                 var entity = _world.NewEntity();
-                 entity.Get<LoadSceneEvent>().SceneName = _sceneName;
-             }
-         }
+
 
         private void OnDestroy()
         {
@@ -110,8 +107,7 @@ namespace UI.PauseMenu
                 _saveButton.onClick.RemoveListener(OnSaveClicked);
             if (_dropSaveButton != null)
                 _dropSaveButton.onClick.RemoveListener(OnDropSaveClicked);
-            if (_exitButton != null)
-                _exitButton.onClick.RemoveListener(OnExitClicked);
+
         }
     }
 } 

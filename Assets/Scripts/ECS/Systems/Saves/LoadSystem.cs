@@ -39,6 +39,12 @@ public class LoadSystem : IEcsInitSystem
                     business.Upgrade1Purchased = businessData.Upgrade1Purchased;
                     business.Upgrade2Purchased = businessData.Upgrade2Purchased;
 
+                    // Если это первый бизнес и он не куплен, устанавливаем уровень 1
+                    if (business.Id == 0 && business.Level == 0)
+                    {
+                        business.Level = 1;
+                    }
+
                     // восстановление прогресса дохода
                     var entity = _businesses.GetEntity(i);
                     if (entity.Has<IncomeProgress>())

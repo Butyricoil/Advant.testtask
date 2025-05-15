@@ -33,7 +33,7 @@ public class DropSaveSystem : IEcsRunSystem
 
         // Сбрасываем баланс
         ref var balance = ref _balance.Get1(0);
-        balance.Value = 0;
+        balance.Value = 12;
 
         // Сбрасываем прогресс дохода
         foreach (var i in _progress)
