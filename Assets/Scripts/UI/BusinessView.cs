@@ -7,23 +7,23 @@ using System;
 public class BusinessView : MonoBehaviour, IDisposable
 {
     [Header("UI References")]
-    [SerializeField] private TMP_Text _nameBusinessText;    // название бизнеса
-    [SerializeField] private Image _progressBusinessImage;  // прогресс бар
-    [SerializeField] private TMP_Text _levelBusinessText; // уровень бизнеса
-    [SerializeField] private TMP_Text _incomeBusinessText;  // доход бизнеса
-    [SerializeField] private Button _levelUpBusinessButton; // кнопка повышения уровня
-    [SerializeField] private TMP_Text _levelUpBusinessPriceText;   // цена повышения уровня
-    [SerializeField] private Button _upgradeBusiness1Button; // кнопка покупки первого улучшения
-    [SerializeField] private TMP_Text _upgradeBusiness1Text; // текст первого улучшения
-    [SerializeField] private Button _upgradeBusiness2Button; // кнопка покупки второго улучшения
-    [SerializeField] private TMP_Text _upgradeBusiness2Text; // текст второго улучшения
+    [SerializeField] private TMP_Text _nameBusinessText;
+    [SerializeField] private Image _progressBusinessImage;
+    [SerializeField] private TMP_Text _levelBusinessText;
+    [SerializeField] private TMP_Text _incomeBusinessText;
+    [SerializeField] private Button _levelUpBusinessButton;
+    [SerializeField] private TMP_Text _levelUpBusinessPriceText;
+    [SerializeField] private Button _upgradeBusiness1Button;
+    [SerializeField] private TMP_Text _upgradeBusiness1Text;
+    [SerializeField] private Button _upgradeBusiness2Button;
+    [SerializeField] private TMP_Text _upgradeBusiness2Text;
 
-    private EcsWorld _world; // ссылка на мир ECS
-    private EcsEntity _entity; // ссылка на сущность бизнеса
-    private BusinessConfig _config; // ссылка на конфигурацию бизнеса
-    private BusinessNamesConfig _namesConfig; // ссылка на конфигурацию названий бизнеса
+    private EcsWorld _world;
+    private EcsEntity _entity;
+    private BusinessConfig _config;
+    private BusinessNamesConfig _namesConfig;
 
-    private void ValidateReferences() // проверка объектов со сцены
+    private void ValidateReferences()
     {
         if (_nameBusinessText == null) Debug.LogError("Name text reference is missing!");
         if (_progressBusinessImage == null) Debug.LogError("Progress image reference is missing!");
@@ -67,12 +67,12 @@ public class BusinessView : MonoBehaviour, IDisposable
 
     private void Update()
     {
-        if (!_world.IsAlive() || !_entity.IsAlive()) return; // проверяем, что мир и сущность живы
+        if (!_world.IsAlive() || !_entity.IsAlive()) return;
 
         if (_entity.Has<IncomeProgress>())
         {
             float progress = _entity.Get<IncomeProgress>().Value;
-            _progressBusinessImage.fillAmount = progress; // Обновляем fillAmount в зависимости от прогресса
+            _progressBusinessImage.fillAmount = progress;
         }
     }
 

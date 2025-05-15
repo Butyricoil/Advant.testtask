@@ -1,14 +1,19 @@
 ﻿using Leopotam.Ecs;
 using UnityEngine;
+using UI.PauseMenu;
+using UnityEngine.Serialization;
 
-public class GameBootstrap : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
-    [SerializeField] private BusinessConfig _businessConfig; // конфигурация бизнеса
-    [SerializeField] private BusinessNamesConfig _namesConfig; // конфигурация названий бизнеса
-    [SerializeField] private BusinessView _businessViewPrefab; // префаб представления бизнеса
-    [SerializeField] private Transform _businessesContainer; // контейнер для бизнеса
-    [SerializeField] private BalanceView _balanceView; // представление баланса
-    [SerializeField] private SaveButtonView _saveButtonView; // представление кнопки сохранения
+    [Header("Business Configuration")]
+    [SerializeField] private BusinessConfig _businessConfig;
+    [SerializeField] private BusinessNamesConfig _namesConfig;
+    
+    [Header("UI References")]
+    [SerializeField] private BusinessView _businessViewPrefab;
+    [SerializeField] private Transform _businessesContainer;
+    [SerializeField] private BalanceView _balanceView;
+    [SerializeField] private PauseMenuView _pauseMenuView;
 
     private EcsWorld _world;
     private EcsSystems _systems;
@@ -20,28 +25,31 @@ public class GameBootstrap : MonoBehaviour
         _world = new EcsWorld();
         _systems = new EcsSystems(_world);
 
-        // Сначала инициализируем базовые сущности
+        InitializeSystems();
+        _systems.Init();
+        Debug.Log("Системы инициализированы");
+
+        InitializeUI();
+    }
+
+    private void InitializeSystems()
+    {
         _systems
             .Add(new BusinessInitSystem(_businessConfig, _namesConfig))
-            // Затем загружаем сохранение
             .Add(new LoadSystem())
-            // Затем добавляем остальные системы
             .Add(new IncomeProgressSystem(_businessConfig))
             .Add(new LevelUpSystem(_businessConfig))
             .Add(new UpgradeSystem(_businessConfig))
             .Add(new UpdateViewSystem())
             .Add(new SaveSystem())
+            .Add(new DropSaveSystem())
             .OneFrame<UpdateViewEvent>()
             .OneFrame<LevelUpRequest>()
             .OneFrame<UpgradeRequest>()
             .OneFrame<SaveEvent>()
+            .OneFrame<DropSaveEvent>()
             .Inject(_businessConfig)
             .Inject(_namesConfig);
-
-        _systems.Init();
-        Debug.Log("Системы инициализированы");
-
-        InitializeUI();
     }
 
     private void ValidateReferences()
@@ -56,15 +64,21 @@ public class GameBootstrap : MonoBehaviour
             Debug.LogError("Businesses container reference is missing!");
         if (_balanceView == null)
             Debug.LogError("BalanceView reference is missing!");
-        if (_saveButtonView == null)
-            Debug.LogError("SaveButtonView reference is missing!");
+        if (_pauseMenuView == null)
+            Debug.LogError("PauseMenuView reference is missing!");
     }
 
     private void InitializeUI()
     {
         if (!_world.IsAlive()) return;
 
-        // инициализация представления баланса
+        InitializeBalanceView();
+        InitializeBusinessViews();
+        InitializePauseMenu();
+    }
+
+    private void InitializeBalanceView()
+    {
         var balanceFilter = _world.GetFilter(typeof(EcsFilter<Balance>));
         if (!balanceFilter.IsEmpty())
         {
@@ -75,8 +89,10 @@ public class GameBootstrap : MonoBehaviour
         {
             Debug.LogError("Не найдена сущность баланса!");
         }
+    }
 
-        // инициализация представления бизнеса
+    private void InitializeBusinessViews()
+    {
         var businessFilter = _world.GetFilter(typeof(EcsFilter<Business>));
         if (!businessFilter.IsEmpty())
         {
@@ -92,10 +108,21 @@ public class GameBootstrap : MonoBehaviour
         {
             Debug.LogError("Не найдены сущности бизнесов!");
         }
+    }
 
-        // инициализация кнопки сохранения
-        _saveButtonView.Initialize(_world);
-        Debug.Log("Кнопка сохранения инициализирована");
+    private void InitializePauseMenu()
+    {
+        _pauseMenuView.Initialize(_world);
+        var pauseFilter = _world.GetFilter(typeof(EcsFilter<PauseEvent>));
+        if (!pauseFilter.IsEmpty())
+        {
+            foreach (var i in pauseFilter)
+            {
+                var entity = pauseFilter.GetEntity(i);
+                entity.Destroy();
+            }
+        }
+        Debug.Log("Меню паузы инициализировано");
     }
 
     private void Update()
@@ -108,7 +135,6 @@ public class GameBootstrap : MonoBehaviour
         if (_world != null && _world.IsAlive())
         {
             _world.NewEntity().Get<SaveEvent>();
-            // даем системам шанс обработать событие сохранения
             _systems?.Run();
         }
     }

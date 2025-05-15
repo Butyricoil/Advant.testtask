@@ -32,7 +32,7 @@ public class BalanceView : MonoBehaviour
 
     private void Update()
     {
-        if (!_world.IsAlive() || !_balanceEntity.IsAlive()) return;
+        if (_world == null || !_world.IsAlive() || !_balanceEntity.IsAlive()) return;
 
         UpdateView();
     }

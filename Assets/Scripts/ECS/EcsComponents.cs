@@ -12,10 +12,7 @@ public struct IncomeProgress
     public float TimePassed;
 }
 
-public struct LevelUpRequest
-{
-    public int BusinessId;
-}
+public struct LevelUpRequest { public int BusinessId; }
 
 public struct UpgradeRequest
 {
@@ -23,15 +20,22 @@ public struct UpgradeRequest
     public int UpgradeId;
 }
 
-public struct Balance
-{
-    public int Value;
-}
+public struct Balance { public int Value; }
 
 public readonly struct UpdateViewEvent {}
 
 public readonly struct SaveEvent {}
 
+public readonly struct DropSaveEvent {}
+
 public readonly struct LoadEvent {}
 
 public struct BusinessInitialized {}
+
+public struct PauseEvent { }
+
+public struct ContinueEvent { }
+
+public struct LoadSceneEvent { public string SceneName; }
+
+public struct ExitEvent { }

@@ -1,5 +1,6 @@
-﻿using Leopotam.Ecs;
-using UnityEngine;
+﻿using System;
+using Leopotam.Ecs;
+using Object = UnityEngine.Object;
 
 public class UpdateViewSystem : IEcsRunSystem
 {
@@ -7,6 +8,7 @@ public class UpdateViewSystem : IEcsRunSystem
     private EcsFilter<Business> _businesses;
     private EcsFilter<Balance> _balance;
 
+    [Obsolete("Obsolete")]
     public void Run()
     {
         if (_updateEvents.IsEmpty()) return;
