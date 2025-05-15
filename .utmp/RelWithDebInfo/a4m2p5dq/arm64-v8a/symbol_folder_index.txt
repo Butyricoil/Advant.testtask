@@ -1,0 +1,1 @@
+D:\Unity\UnityProject\Advant.testtask\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\RelWithDebInfo\a4m2p5dq\obj\arm64-v8a
