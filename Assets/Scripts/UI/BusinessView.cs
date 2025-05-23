@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using UnityEngine.Events;
 
 public class BusinessView : MonoBehaviour, IDisposable
 {
@@ -22,25 +23,12 @@ public class BusinessView : MonoBehaviour, IDisposable
     private EcsEntity _entity;
     private BusinessConfig _config;
     private BusinessNamesConfig _namesConfig;
-
-    private void ValidateReferences()
-    {
-        if (_nameBusinessText == null) Debug.LogError("Name text reference is missing!");
-        if (_progressBusinessImage == null) Debug.LogError("Progress image reference is missing!");
-        if (_levelBusinessText == null) Debug.LogError("Level text reference is missing!");
-        if (_incomeBusinessText == null) Debug.LogError("Income text reference is missing!");
-        if (_levelUpBusinessButton == null) Debug.LogError("Level up button reference is missing!");
-        if (_levelUpBusinessPriceText == null) Debug.LogError("Level up price text reference is missing!");
-        if (_upgradeBusiness1Button == null) Debug.LogError("Upgrade 1 button reference is missing!");
-        if (_upgradeBusiness1Text == null) Debug.LogError("Upgrade 1 text reference is missing!");
-        if (_upgradeBusiness2Button == null) Debug.LogError("Upgrade 2 button reference is missing!");
-        if (_upgradeBusiness2Text == null) Debug.LogError("Upgrade 2 text reference is missing!");
-    }
+    private UnityAction _upgrade1Action;
+    private UnityAction _upgrade2Action;
+    private EcsFilter<UpdateViewComponent> _updateViewFilter;
 
     public void Initialize(EcsWorld world, EcsEntity entity, BusinessConfig config, BusinessNamesConfig namesConfig)
     {
-        ValidateReferences();
-
         _world = world;
         _entity = entity;
         _config = config;
@@ -59,10 +47,20 @@ public class BusinessView : MonoBehaviour, IDisposable
         _upgradeBusiness2Text.text = $"{_namesConfig.Upgrade2Names[business.Id]}\n(${_config.Upgrade2Prices[business.Id]})";
 
         _levelUpBusinessButton.onClick.AddListener(OnLevelUpClicked);
-        _upgradeBusiness1Button.onClick.AddListener(() => OnUpgradeClicked(1));
-        _upgradeBusiness2Button.onClick.AddListener(() => OnUpgradeClicked(2));
+        
+        _upgrade1Action = () => OnUpgradeClicked(1);
+        _upgrade2Action = () => OnUpgradeClicked(2);
+        
+        _upgradeBusiness1Button.onClick.AddListener(_upgrade1Action);
+        _upgradeBusiness2Button.onClick.AddListener(_upgrade2Action);
 
-        UpdateView();
+        // Регистрируем view в системе обновлния
+        _updateViewFilter = _world.GetFilter<UpdateViewComponent>();
+        if (_updateViewFilter.GetEntitiesCount() > 0)
+        {
+            ref var updateViewComponent = ref _updateViewFilter.Get1(0);
+            updateViewComponent.RegisterBusinessView(this);
+        }
     }
 
     private void Update()
@@ -93,20 +91,20 @@ public class BusinessView : MonoBehaviour, IDisposable
 
     private void UpdateUpgradeButtons(Business business)
     {
-        if (business.Upgrade1Purchased) // проверяем, куплено ли первое улучшение
+        if (business.Upgrade1Purchased)
         {
             _upgradeBusiness1Text.text = "Purchased";
             _upgradeBusiness1Button.interactable = false;
         }
 
-        if (business.Upgrade2Purchased) // проверяем, куплено ли второе улучшение
+        if (business.Upgrade2Purchased)
         {
             _upgradeBusiness2Text.text = "Purchased";
             _upgradeBusiness2Button.interactable = false;
         }
     }
 
-    private void OnLevelUpClicked() // кнопка покупки Lеvеlup
+    private void OnLevelUpClicked()
     {
         if (!_world.IsAlive() || !_entity.IsAlive()) return;
 
@@ -115,7 +113,7 @@ public class BusinessView : MonoBehaviour, IDisposable
         request.BusinessId = _entity.Get<Business>().Id;
     }
 
-    private void OnUpgradeClicked(int upgradeId) // кнопка покупки улучшения
+    private void OnUpgradeClicked(int upgradeId)
     {
         if (!_world.IsAlive() || !_entity.IsAlive()) return;
 
@@ -125,14 +123,24 @@ public class BusinessView : MonoBehaviour, IDisposable
         request.UpgradeId = upgradeId;
     }
 
-    public void Dispose() // отписка от кнопки
+    public void Dispose()
     {
         if (_levelUpBusinessButton != null)
             _levelUpBusinessButton.onClick.RemoveListener(OnLevelUpClicked);
         if (_upgradeBusiness1Button != null)
-            _upgradeBusiness1Button.onClick.RemoveListener(() => OnUpgradeClicked(1));
+            _upgradeBusiness1Button.onClick.RemoveListener(_upgrade1Action);
         if (_upgradeBusiness2Button != null)
-            _upgradeBusiness2Button.onClick.RemoveListener(() => OnUpgradeClicked(2));
+            _upgradeBusiness2Button.onClick.RemoveListener(_upgrade2Action);
+
+        // Отписываемся от системы обновления
+        if (_world != null && _world.IsAlive() && _updateViewFilter != null)
+        {
+            if (_updateViewFilter.GetEntitiesCount() > 0)
+            {
+                ref var updateViewComponent = ref _updateViewFilter.Get1(0);
+                updateViewComponent.UnregisterBusinessView(this);
+            }
+        }
     }
 
     private void OnDestroy()

@@ -131,9 +131,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OnApplicationQuit()
+    private void OnApplicationPause(bool pauseStatus)
     {
-        if (_world != null && _world.IsAlive())
+        if (pauseStatus && _world != null && _world.IsAlive())
+        {
+            _world.NewEntity().Get<SaveEvent>();
+            _systems?.Run();
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus && _world != null && _world.IsAlive())
         {
             _world.NewEntity().Get<SaveEvent>();
             _systems?.Run();
